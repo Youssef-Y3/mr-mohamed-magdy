@@ -360,7 +360,7 @@ function CourseUnitsPanel({ course, onReload }) {
 
 function NewCourseModal({ open, onClose, onCreated }) {
   const [title, setTitle] = React.useState('');
-  const [grade, setGrade] = React.useState('first');
+  const [grade, setGrade] = React.useState('اولي ثانوي');
   const [busy, setBusy] = React.useState(false);
   const toast = useToast();
   const submit = async (e) => {
@@ -382,7 +382,7 @@ function NewCourseModal({ open, onClose, onCreated }) {
         <div>
           <label className="text-sm font-bold mb-1.5 block text-ink-900/70 dark:text-white/70">الصف</label>
           <div className="grid grid-cols-2 gap-2">
-            {[{v:'first',l:'أولى ثانوي'},{v:'third',l:'تالتة ثانوي'}].map(g => (
+            {[{v:'اولي ثانوي',l:'أولى ثانوي'},{v:'تالته ثانوي',l:'تالتة ثانوي'}].map(g => (
               <button key={g.v} type="button" onClick={() => setGrade(g.v)}
                 className={`p-3 rounded-xl border-2 font-bold ${grade === g.v ? 'border-brand-700 bg-brand-50 dark:bg-brand-900/40' : 'border-brand-100 dark:border-brand-900/40'}`}>{g.l}</button>
             ))}
@@ -751,8 +751,8 @@ function AdminStudentsPage() {
         </div>
         {[
           { v: 'all',   l: 'الكل' },
-          { v: 'first', l: 'أولى ثانوي' },
-          { v: 'third', l: 'تالتة ثانوي' },
+          { v: 'اولي ثانوي', l: 'أولى ثانوي' },
+          { v: 'تالته ثانوي', l: 'تالتة ثانوي' },
         ].map(f => (
           <button key={f.v} onClick={() => setGrade(f.v)}
             className={`px-5 py-2 rounded-full font-bold ${
