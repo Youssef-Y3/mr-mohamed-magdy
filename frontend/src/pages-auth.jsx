@@ -156,7 +156,7 @@ function LoginPage() {
 function RegisterPage() {
   const { login } = useAuth();
   const toast = useToast();
-  const [form, setForm] = React.useState({ username: '', password: '', name: '', grade: 'first' });
+  const [form, setForm] = React.useState({ username: '', password: '', name: '', grade: 'اولي ثانوي' });
   const [busy, setBusy] = React.useState(false);
 
   const submit = async (e) => {
@@ -211,8 +211,8 @@ function RegisterPage() {
           <label className="text-sm font-bold text-ink-900/70 dark:text-white/70 mb-1.5 block">صفك الدراسي</label>
           <div className="grid grid-cols-2 gap-2">
             {[
-              { v: 'first', l: 'أولى ثانوي' },
-              { v: 'third', l: 'تالتة ثانوي' },
+              { v: 'اولي ثانوي', l: 'أولى ثانوي' },
+              { v: 'تالته ثانوي', l: 'تالتة ثانوي' },
             ].map(g => (
               <button key={g.v} type="button" onClick={() => setForm({...form, grade: g.v})}
                 className={`p-3 rounded-xl border-2 font-bold transition-all ${
@@ -235,7 +235,7 @@ function RegisterPage() {
 function CompleteProfilePage() {
   const { user, token, setUser } = useAuth();
   const toast = useToast();
-  const [grade, setGrade] = React.useState('first');
+  const [grade, setGrade] = React.useState('اولي ثانوي');
   const [busy, setBusy] = React.useState(false);
 
   React.useEffect(() => {
@@ -264,8 +264,8 @@ function CompleteProfilePage() {
       <form onSubmit={submit} className="space-y-4">
         <div className="grid grid-cols-1 gap-3">
           {[
-            { v: 'first', l: 'أولى ثانوي', d: 'مقدمة قوية في الأحياء والعلوم' },
-            { v: 'third', l: 'تالتة ثانوي', d: 'ثانوية عامة أو أزهر — الشامل' },
+            { v: 'اولي ثانوي', l: 'أولى ثانوي', d: 'مقدمة قوية في الأحياء والعلوم' },
+            { v: 'تالته ثانوي', l: 'تالتة ثانوي', d: 'ثانوية عامة أو أزهر — الشامل' },
           ].map(g => (
             <button key={g.v} type="button" onClick={() => setGrade(g.v)}
               className={`p-5 rounded-2xl border-2 text-right transition-all ${
