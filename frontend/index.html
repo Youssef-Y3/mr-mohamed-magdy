@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>مستر محمد مجدي — منصة الأحياء والعلوم المتكاملة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        fontFamily: {
+          cairo: ['Cairo', 'system-ui', 'sans-serif'],
+          tajawal: ['Tajawal', 'system-ui', 'sans-serif'],
+        },
+        colors: {
+          brand: {
+            50:  '#EEF0FF',
+            100: '#E0E4FF',
+            200: '#C4CBFF',
+            300: '#A5AEFF',
+            400: '#8B93FF',
+            500: '#6B70F5',
+            600: '#4F53E8',
+            700: '#4338CA',
+            800: '#3730A3',
+            900: '#2E2A82',
+            950: '#1E1B4B',
+          },
+          violet2: {
+            400: '#A78BFA',
+            500: '#8B5CF6',
+            600: '#7C3AED',
+            700: '#6D28D9',
+            800: '#5B21B6',
+            900: '#4C1D95',
+          },
+          ink: {
+            50:  '#F7F7FB',
+            100: '#EEF0F7',
+            900: '#0B0B18',
+            950: '#050510',
+          }
+        },
+        boxShadow: {
+          'soft': '0 10px 40px -12px rgba(79, 83, 232, 0.25)',
+          'brand': '0 20px 60px -15px rgba(124, 58, 237, 0.5)',
+          'glow-brand': '0 0 40px rgba(139, 92, 246, 0.35)',
+        },
+        borderRadius: {
+          '4xl': '2rem',
+          '5xl': '2.5rem',
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  html, body { font-family: 'Cairo', system-ui, sans-serif; }
+  body {
+    background: #F7F7FB;
+    color: #0B0B18;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  .dark body { background: #050510; color: #EEF0F7; }
+
+  /* عرض دائم للسكرول بار الأنيق */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(124, 58, 237, 0.3); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(124, 58, 237, 0.5); }
+
+  /* blobs animation */
+  @keyframes blobFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -50px) scale(1.1); }
+    66% { transform: translate(-20px, 20px) scale(0.9); }
+  }
+  .blob { animation: blobFloat 20s ease-in-out infinite; filter: blur(60px); }
+
+  /* text gradient */
+  .text-gradient-brand {
+    background: linear-gradient(135deg, #4338CA 0%, #7C3AED 50%, #A78BFA 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Glass card */
+  .glass-light {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+  }
+  .glass-dark {
+    background: rgba(20, 18, 45, 0.55);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(139, 92, 246, 0.15);
+  }
+
+  /* Custom range for video player */
+  .video-range {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    background: transparent;
+    cursor: pointer;
+  }
+  .video-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.8);
+    cursor: pointer;
+  }
+  .video-range::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    border: none;
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.8);
+    cursor: pointer;
+  }
+
+  /* Hide default video controls when using custom */
+  video::-webkit-media-controls { display: none !important; }
+
+  /* No text selection on UI chrome */
+  .no-select { user-select: none; -webkit-user-select: none; }
+
+  /* Reel snap container */
+  .reels-scroll {
+    scroll-snap-type: y mandatory;
+    overflow-y: scroll;
+    height: 100dvh;
+    scrollbar-width: none;
+  }
+  .reels-scroll::-webkit-scrollbar { display: none; }
+  .reel-item {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    height: 100dvh;
+  }
+
+  /* Cell division loader */
+  @keyframes cellDivide {
+    0%, 100% { transform: translateX(0); opacity: 1; }
+    50% { transform: translateX(var(--dist, 14px)); opacity: 0.85; }
+  }
+  .cell-a { animation: cellDivide 1.4s ease-in-out infinite; --dist: -14px; }
+  .cell-b { animation: cellDivide 1.4s ease-in-out infinite; --dist: 14px; }
+
+  /* DNA rotate */
+  @keyframes dnaSpin { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
+  .dna-spin { animation: dnaSpin 6s linear infinite; transform-style: preserve-3d; }
+
+  /* ripple between reels */
+  @keyframes ripple {
+    from { transform: scale(0); opacity: 0.5; }
+    to { transform: scale(2.5); opacity: 0; }
+  }
+  .ripple-anim { animation: ripple 700ms ease-out forwards; }
+
+  /* floating particles */
+  @keyframes floatUp {
+    0% { transform: translateY(0) translateX(0); opacity: 0; }
+    10% { opacity: var(--op, 0.5); }
+    90% { opacity: var(--op, 0.5); }
+    100% { transform: translateY(-110vh) translateX(var(--drift, 20px)); opacity: 0; }
+  }
+  .particle { animation: floatUp linear infinite; }
+
+  /* confetti dots */
+  @keyframes confettiBurst {
+    0% { transform: translate(0,0) scale(0); opacity: 1; }
+    100% { transform: translate(var(--tx), var(--ty)) scale(1); opacity: 0; }
+  }
+  .confetti-dot { animation: confettiBurst 1.2s ease-out forwards; }
+
+  /* progress shimmer */
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .shimmer {
+    background: linear-gradient(90deg, transparent, rgba(139,92,246,0.15), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 1.6s linear infinite;
+  }
+
+  /* input styles */
+  .field {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border-radius: 0.9rem;
+    background: rgba(255,255,255,0.9);
+    border: 1.5px solid rgba(124,58,237,0.15);
+    outline: none;
+    transition: all 0.2s;
+    font-family: inherit;
+    font-size: 0.95rem;
+  }
+  .field:focus { border-color: #7C3AED; box-shadow: 0 0 0 4px rgba(124,58,237,0.12); }
+  .dark .field { background: rgba(30,27,75,0.5); border-color: rgba(139,92,246,0.25); color: #EEF0F7; }
+  .dark .field:focus { border-color: #A78BFA; box-shadow: 0 0 0 4px rgba(167,139,250,0.15); }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #4338CA 0%, #7C3AED 100%);
+    color: white;
+    border: none;
+    padding: 0.85rem 1.5rem;
+    border-radius: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 8px 24px -8px rgba(124,58,237,0.6);
+  }
+  .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 14px 32px -8px rgba(124,58,237,0.7); }
+  .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  .btn-ghost {
+    background: rgba(124,58,237,0.08);
+    color: #4338CA;
+    padding: 0.85rem 1.5rem;
+    border-radius: 0.9rem;
+    font-weight: 600;
+    border: 1.5px solid rgba(124,58,237,0.18);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-ghost:hover { background: rgba(124,58,237,0.15); }
+  .dark .btn-ghost { background: rgba(139,92,246,0.14); color: #C4B5FD; border-color: rgba(139,92,246,0.3); }
+
+  /* animated grid line background for dark hero */
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(124,58,237,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,58,237,0.06) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .dark .grid-bg {
+    background-image:
+      linear-gradient(rgba(139,92,246,0.09) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(139,92,246,0.09) 1px, transparent 1px);
+  }
+
+  /* hide scrollbar for reels admin thumbs */
+  .noscroll::-webkit-scrollbar { display: none; }
+  .noscroll { scrollbar-width: none; }
+
+  /* skeleton */
+  .sk {
+    background: linear-gradient(90deg, rgba(0,0,0,0.05) 0%, rgba(124,58,237,0.08) 50%, rgba(0,0,0,0.05) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s linear infinite;
+    border-radius: 0.75rem;
+  }
+  .dark .sk {
+    background: linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(139,92,246,0.1) 50%, rgba(255,255,255,0.04) 100%);
+    background-size: 200% 100%;
+  }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React 18 + Router (via hash) + Babel -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- Framer Motion UMD -->
+  <script src="https://unpkg.com/framer-motion@11.11.17/dist/framer-motion.js"></script>
+
+  <!-- Recharts (with deps) -->
+  <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+  <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <!-- Tweak defaults + globals BEFORE all module scripts -->
+  <script>
+    window.API_BASE = 'https://mr-magdy-platform.tafra-y3.workers.dev';
+    window.GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID';
+    window.TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+      "palette": 0,
+      "heroStyle": 0,
+      "aboutDraft": 1,
+      "animIntensity": 1,
+      "particlesOn": true,
+      "sampleData": true,
+      "darkMode": false
+    }/*EDITMODE-END*/;
+  </script>
+
+  <!-- App modules -->
+  <script type="text/babel" src="tweaks_panel.jsx"></script>
+  <script type="text/babel" src="src/lib.jsx"></script>
+  <script type="text/babel" src="src/icons.jsx"></script>
+  <script type="text/babel" src="src/ui.jsx"></script>
+  <script type="text/babel" src="src/sample-data.jsx"></script>
+  <script type="text/babel" src="src/pages-public.jsx"></script>
+  <script type="text/babel" src="src/pages-auth.jsx"></script>
+  <script type="text/babel" src="src/pages-student.jsx"></script>
+  <script type="text/babel" src="src/pages-reels.jsx"></script>
+  <script type="text/babel" src="src/pages-lecture.jsx"></script>
+  <script type="text/babel" src="src/pages-payment.jsx"></script>
+  <script type="text/babel" src="src/pages-admin.jsx"></script>
+  <script type="text/babel" src="src/app.jsx"></script>
+</body>
+</html>
