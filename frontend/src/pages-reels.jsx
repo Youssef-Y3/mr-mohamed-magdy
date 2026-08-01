@@ -4,21 +4,6 @@
 
 const motionR = (window.Motion && window.Motion.motion) || {};
 
-// Flatten reels from all courses
-function collectReels(courses) {
-  const reels = [];
-  (courses || []).forEach(c => {
-    (c.units || []).forEach(u => {
-      (u.lessons || []).forEach(l => {
-        if (l.content_type === 'reel') {
-          reels.push({ ...l, course_title: c.title, unit_title: u.title, course_id: c.id, grade: c.grade });
-        }
-      });
-    });
-  });
-  return reels;
-}
-
 function ReelsPage() {
   const { tweaks } = useTweaksCtx();
   const { user } = useAuth();
@@ -28,19 +13,18 @@ function ReelsPage() {
   const containerRef = React.useRef(null);
   const [ripple, setRipple] = React.useState(null);
 
-  // Load all reels for the student's grade
+  // Load all reels for the student's grade directly from /api/reels.
   React.useEffect(() => {
     (async () => {
       try {
-        const data = await apiFetch('/api/courses');
-        const list = Array.isArray(data) ? data : (data.courses || data.items || []);
-        const grade = user?.grade || 'first';
-        const filtered = list.filter(c => c.grade === grade);
-        let r = collectReels(filtered);
-        if (r.length === 0 && tweaks.sampleData) {
-          r = collectReels(SAMPLE_COURSES.filter(c => c.grade === grade));
+        const data = await apiFetch('/api/reels');
+        const list = Array.isArray(data) ? data : (data.reels || []);
+        if (list.length === 0 && tweaks.sampleData) {
+          const grade = user?.grade || 'first';
+          setReels(collectReels(SAMPLE_COURSES.filter(c => c.grade === grade)));
+        } else {
+          setReels(list);
         }
-        setReels(r);
       } catch {
         const grade = user?.grade || 'first';
         setReels(tweaks.sampleData ? collectReels(SAMPLE_COURSES.filter(c => c.grade === grade)) : []);
@@ -275,6 +259,21 @@ function ReelItem({ reel, active, index, total }) {
       )}
     </div>
   );
+}
+
+// collectReels kept for sample-data fallback only (SAMPLE_COURSES still has nested units).
+function collectReels(courses) {
+  const reels = [];
+  (courses || []).forEach(c => {
+    (c.units || []).forEach(u => {
+      (u.lessons || []).forEach(l => {
+        if (l.content_type === 'reel') {
+          reels.push({ ...l, course_title: c.title, unit_title: u.title, course_id: c.id, grade: c.grade });
+        }
+      });
+    });
+  });
+  return reels;
 }
 
 Object.assign(window, { ReelsPage, collectReels });
