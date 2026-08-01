@@ -715,27 +715,38 @@ function RejectModal({ open, onClose, onSubmit }) {
 // ---- Admin Students ----
 function AdminStudentsPage() {
   const { tweaks } = useTweaksCtx();
+  const toast = useToast();
   const [students, setStudents] = React.useState(null);
   const [search, setSearch] = React.useState('');
   const [grade, setGrade] = React.useState('all');
+  const [revokeFor, setRevokeFor] = React.useState(null);
 
-  React.useEffect(() => {
-    (async () => {
-      try {
-        const data = await apiFetch('/api/admin/students');
-        setStudents(Array.isArray(data) ? data : (data.students || data.items || []));
-      } catch { setStudents(tweaks.sampleData ? SAMPLE_ADMIN_STUDENTS : []); }
-    })();
-  }, [tweaks.sampleData]);
+  const load = async () => {
+    try {
+      const data = await apiFetch('/api/admin/students');
+      setStudents(Array.isArray(data) ? data : (data.students || data.items || []));
+    } catch { setStudents(tweaks.sampleData ? SAMPLE_ADMIN_STUDENTS : []); }
+  };
+  React.useEffect(() => { load(); }, [tweaks.sampleData]);
 
   const filtered = React.useMemo(() => {
     if (!students) return null;
     return students.filter(s => {
       if (grade !== 'all' && s.grade !== grade) return false;
-      if (search && !s.name.includes(search) && !s.username.includes(search)) return false;
+      // FIX: username / name can be null (google-only accounts never set a
+      // username) — .includes() on undefined used to throw and silently
+      // break the whole filter.
+      if (search && !(s.name || '').includes(search) && !(s.username || '').includes(search)) return false;
       return true;
     });
   }, [students, grade, search]);
+
+  const revoke = async (id) => {
+    try {
+      await apiFetch(`/api/admin/students/${id}/subscription`, { method: 'DELETE' });
+      toast.show('اتلغى الاشتراك', 'success'); setRevokeFor(null); load();
+    } catch (e) { toast.show(e.message || 'فشل', 'error'); }
+  };
 
   return (
     <AdminLayout active="students">
@@ -765,52 +776,75 @@ function AdminStudentsPage() {
       {filtered && filtered.length === 0 && <EmptyState title="لا يوجد طلاب"/>}
       {filtered && filtered.length > 0 && (
         <div className="overflow-x-auto rounded-3xl bg-white dark:bg-ink-900 border border-brand-100 dark:border-brand-900/40 shadow-soft">
-          <table className="w-full text-right min-w-[640px]">
+          <table className="w-full text-right min-w-[720px]">
             <thead className="bg-brand-50 dark:bg-brand-900/30">
               <tr className="text-xs font-black text-brand-800 dark:text-brand-200">
                 <th className="p-4">الطالب</th>
                 <th className="p-4">اليوزر</th>
                 <th className="p-4">الصف</th>
                 <th className="p-4">الاشتراك</th>
-                <th className="p-4">التقدم</th>
                 <th className="p-4">تاريخ الانضمام</th>
+                <th className="p-4">إجراءات</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-brand-50 dark:divide-brand-900/40">
-              {filtered.map(s => (
-                <tr key={s.id} className="hover:bg-brand-50/50 dark:hover:bg-brand-900/20">
-                  <td className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-brand-500 to-violet2-500 text-white flex items-center justify-center font-black text-xs">{s.name?.charAt(0)}</div>
-                      <div className="font-bold text-brand-950 dark:text-white">{s.name}</div>
-                    </div>
-                  </td>
-                  <td className="p-4 font-mono text-sm text-ink-900/70 dark:text-white/70">{s.username}</td>
-                  <td className="p-4 text-sm">{gradeName(s.grade)}</td>
-                  <td className="p-4">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-black ${
-                      s.subscription === 'active' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
-                      : s.subscription === 'pending' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
-                      : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
-                    }`}>
-                      {s.subscription === 'active' ? 'فعّال' : s.subscription === 'pending' ? 'معلق' : 'بدون'}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-24 h-1.5 rounded-full bg-brand-100 dark:bg-brand-900/40 overflow-hidden">
-                        <div className="h-full bg-gradient-to-l from-brand-600 to-violet2-500" style={{ width: `${s.progress}%` }}/>
+              {filtered.map(s => {
+                // FIX: backend returns `subscription_status` (not
+                // `subscription`) — this was the actual bug behind every
+                // row always showing "بدون". Also treat an expired date as
+                // not-active even if the stored status still says active.
+                const isExpired = s.subscription_expires_at && new Date(s.subscription_expires_at).getTime() < Date.now();
+                const status = isExpired ? 'expired' : (s.subscription_status || 'trial');
+                return (
+                  <tr key={s.id} className="hover:bg-brand-50/50 dark:hover:bg-brand-900/20">
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-brand-500 to-violet2-500 text-white flex items-center justify-center font-black text-xs">{s.name?.charAt(0)}</div>
+                        <div className="font-bold text-brand-950 dark:text-white">{s.name}</div>
                       </div>
-                      <span className="text-xs font-bold text-brand-950 dark:text-white">{s.progress}%</span>
-                    </div>
-                  </td>
-                  <td className="p-4 text-xs text-ink-900/60 dark:text-white/50">{s.joined}</td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="p-4 font-mono text-sm text-ink-900/70 dark:text-white/70">{s.username || '—'}</td>
+                    <td className="p-4 text-sm">{gradeName(s.grade)}</td>
+                    <td className="p-4">
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-black ${
+                        status === 'active' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+                        : status === 'expired' ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
+                        : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                      }`}>
+                        {status === 'active' ? 'فعّال' : status === 'expired' ? 'منتهي' : 'بدون'}
+                      </span>
+                    </td>
+                    <td className="p-4 text-xs text-ink-900/60 dark:text-white/50">{s.created_at}</td>
+                    <td className="p-4">
+                      {status === 'active' && (
+                        <button onClick={() => setRevokeFor(s)}
+                          className="px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 text-xs font-black hover:bg-red-100">
+                          إلغاء الاشتراك
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       )}
+
+      {/* Revoke confirm modal */}
+      <Modal open={!!revokeFor} onClose={() => setRevokeFor(null)} title="إلغاء الاشتراك">
+        <div className="space-y-4">
+          <p className="text-ink-900/70 dark:text-white/70">
+            متأكد إنك عايز تلغي اشتراك <span className="font-black text-brand-950 dark:text-white">{revokeFor?.name}</span>؟
+            هيرجع لحالة "بدون" فورا.
+          </p>
+          <button onClick={() => revoke(revokeFor.id)}
+            className="btn-primary w-full !bg-gradient-to-l from-red-600 to-red-500 hover:from-red-700 hover:to-red-600"
+            style={{ background: 'linear-gradient(135deg, #DC2626, #EF4444)' }}>
+            تأكيد الإلغاء
+          </button>
+        </div>
+      </Modal>
     </AdminLayout>
   );
 }
