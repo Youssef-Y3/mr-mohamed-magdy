@@ -308,6 +308,10 @@ function CourseUnitsPanel({ course, onReload }) {
     try { await apiFetch(`/api/admin/lessons/${id}/publish`, { method: 'POST' }); toast.show('اتنشر', 'success'); onReload(); }
     catch (e) { toast.show(e.message || 'فشل', 'error'); }
   };
+  const toggleFree = async (id, current) => {
+    try { await apiFetch(`/api/admin/lessons/${id}/free`, { method: 'POST', body: { is_free: !current } }); toast.show(current ? 'بقى مدفوع' : 'بقى مجاني', 'success'); onReload(); }
+    catch (e) { toast.show(e.message || 'فشل', 'error'); }
+  };
 
   return (
     <div className="border-t border-brand-100 dark:border-brand-900/40 p-5 bg-brand-50/40 dark:bg-brand-950/20">
@@ -338,7 +342,14 @@ function CourseUnitsPanel({ course, onReload }) {
                       ? 'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300'
                       : 'bg-brand-200 text-brand-800 dark:bg-brand-800 dark:text-brand-100'
                   }`}>{l.content_type === 'reel' ? 'ريل' : 'محاضرة'}</span>
+                  {!!l.is_free && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">مجاني</span>
+                  )}
                   <div className="flex-1 text-sm text-brand-950 dark:text-white line-clamp-1">{l.title}</div>
+                  <button onClick={() => toggleFree(l.id, l.is_free)}
+                    className={`text-xs font-black inline-flex items-center gap-1 ${l.is_free ? 'text-amber-600 dark:text-amber-400' : 'text-brand-700 dark:text-brand-300'}`}>
+                    {l.is_free ? 'خليه مدفوع' : 'خليه مجاني'}
+                  </button>
                   <button onClick={() => setShowUpload(l)} className="text-xs font-black text-brand-700 dark:text-brand-300 inline-flex items-center gap-1">
                     <UploadIcon size={14}/> فيديو
                   </button>
