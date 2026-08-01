@@ -20,7 +20,6 @@ function AdminLayout({ children, active }) {
 
   return (
     <div className="flex min-h-screen bg-brand-50/50 dark:bg-ink-950">
-      {/* Sidebar */}
       <aside className={`fixed md:sticky top-0 right-0 h-screen z-40 w-72 bg-white dark:bg-ink-900 border-l border-brand-100 dark:border-brand-900/40 shadow-brand md:shadow-none transition-transform ${
         open ? 'translate-x-0' : 'translate-x-full md:translate-x-0'
       }`}>
@@ -53,7 +52,6 @@ function AdminLayout({ children, active }) {
         </div>
       </aside>
 
-      {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="md:hidden sticky top-0 z-30 bg-white/95 dark:bg-ink-950/95 backdrop-blur border-b border-brand-100 dark:border-brand-900/40 h-16 flex items-center justify-between px-4">
           <button onClick={() => setOpen(v => !v)} className="w-10 h-10 rounded-xl bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 flex items-center justify-center">
@@ -99,7 +97,6 @@ function AdminDashboard() {
         <p className="text-ink-900/60 dark:text-white/60 mb-8">نظرة سريعة على أداء المنصة النهارده</p>
       </FadeIn>
 
-      {/* Stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {[
           { label: 'إيرادات اليوم',   value: fin?.today,  icon: <WalletIcon size={22}/>, color: 'from-emerald-500 to-teal-600' },
@@ -123,7 +120,6 @@ function AdminDashboard() {
         ))}
       </div>
 
-      {/* Chart + Recent */}
       <div className="grid md:grid-cols-[1fr,360px] gap-6">
         <FadeIn delay={0.2}>
           <div className="rounded-3xl p-5 md:p-6 bg-white dark:bg-ink-900 border border-brand-100 dark:border-brand-900/40 shadow-soft">
@@ -284,12 +280,11 @@ function AdminCoursesPage() {
   );
 }
 
-// Course units + lessons expand
 function CourseUnitsPanel({ course, onReload }) {
   const toast = useToast();
   const [showAddUnit, setShowAddUnit] = React.useState(false);
-  const [showAddLesson, setShowAddLesson] = React.useState(null); // unit_id
-  const [showUpload, setShowUpload] = React.useState(null); // lesson
+  const [showAddLesson, setShowAddLesson] = React.useState(null);
+  const [showUpload, setShowUpload] = React.useState(null);
 
   const addUnit = async (title) => {
     try {
@@ -450,7 +445,6 @@ function LessonModal({ open, onClose, onSubmit }) {
   );
 }
 
-// Video upload modal (drag & drop)
 function VideoUploadModal({ open, onClose, lesson, onDone }) {
   const toast = useToast();
   const [file, setFile] = React.useState(null);
@@ -464,7 +458,6 @@ function VideoUploadModal({ open, onClose, lesson, onDone }) {
   const onFile = (f) => {
     if (!f) return;
     setFile(f);
-    // extract duration
     const v = document.createElement('video');
     v.preload = 'metadata';
     v.onloadedmetadata = () => { setDuration(Math.floor(v.duration)); URL.revokeObjectURL(v.src); };
@@ -475,7 +468,6 @@ function VideoUploadModal({ open, onClose, lesson, onDone }) {
     if (!file || !lesson) return;
     setUploading(true);
     try {
-      // Use XHR to get upload progress
       const token = store.get('token');
       await new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
@@ -662,7 +654,6 @@ function AdminPaymentsPage() {
         </div>
       )}
 
-      {/* Receipt lightbox */}
       <Modal open={!!viewReceipt} onClose={() => setViewReceipt(null)} title={`إيصال — ${viewReceipt?.student_name}`} size="lg">
         <div className="text-center">
           <div className="w-full aspect-[3/4] max-h-[70vh] mx-auto rounded-2xl bg-brand-50 dark:bg-brand-900/40 flex items-center justify-center overflow-hidden">
@@ -677,7 +668,6 @@ function AdminPaymentsPage() {
         </div>
       </Modal>
 
-      {/* Reject modal */}
       <RejectModal open={!!rejectFor} onClose={() => setRejectFor(null)} onSubmit={(note) => reject(rejectFor.id, note)}/>
     </AdminLayout>
   );
@@ -744,9 +734,6 @@ function AdminStudentsPage() {
     if (!students) return null;
     return students.filter(s => {
       if (grade !== 'all' && s.grade !== grade) return false;
-      // FIX: username / name can be null (google-only accounts never set a
-      // username) — .includes() on undefined used to throw and silently
-      // break the whole filter.
       if (search && !(s.name || '').includes(search) && !(s.username || '').includes(search)) return false;
       return true;
     });
@@ -800,10 +787,6 @@ function AdminStudentsPage() {
             </thead>
             <tbody className="divide-y divide-brand-50 dark:divide-brand-900/40">
               {filtered.map(s => {
-                // FIX: backend returns `subscription_status` (not
-                // `subscription`) — this was the actual bug behind every
-                // row always showing "بدون". Also treat an expired date as
-                // not-active even if the stored status still says active.
                 const isExpired = s.subscription_expires_at && new Date(s.subscription_expires_at).getTime() < Date.now();
                 const status = isExpired ? 'expired' : (s.subscription_status || 'trial');
                 return (
@@ -842,7 +825,6 @@ function AdminStudentsPage() {
         </div>
       )}
 
-      {/* Revoke confirm modal */}
       <Modal open={!!revokeFor} onClose={() => setRevokeFor(null)} title="إلغاء الاشتراك">
         <div className="space-y-4">
           <p className="text-ink-900/70 dark:text-white/70">
@@ -961,6 +943,27 @@ function AdminSettingsPage() {
   const { tweaks } = useTweaksCtx();
   const toast = useToast();
   const [form, setForm] = React.useState(null);
+  const [logoUrl, setLogoUrl] = React.useState(null);
+  const [avatarUrl, setAvatarUrl] = React.useState(null);
+  const [uploadingLogo, setUploadingLogo] = React.useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = React.useState(false);
+
+  const THEME_COLORS = [
+    { key: 'purple', color: '#7C3AED', label: 'بنفسجي' },
+    { key: 'indigo', color: '#4338CA', label: 'كحلي' },
+    { key: 'pink',   color: '#EC4899', label: 'وردي' },
+    { key: 'cyan',   color: '#22D3EE', label: 'أزرق نيون' },
+    { key: 'emerald',color: '#10B981', label: 'أخضر' },
+  ];
+
+  const loadBrandImage = async (type, setUrl) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/brand/${type}`);
+      if (!res.ok) { setUrl(null); return; }
+      const blob = await res.blob();
+      setUrl(URL.createObjectURL(blob));
+    } catch { setUrl(null); }
+  };
 
   React.useEffect(() => {
     (async () => {
@@ -973,6 +976,7 @@ function AdminSettingsPage() {
           price_term:           s.price_term || 499,
           price_yearly:         s.price_yearly || 1299,
           teacher_bio:          s.teacher_bio || ABOUT_DRAFTS[tweaks.aboutDraft].body,
+          theme_color:          s.theme_color || '#7C3AED',
         });
       } catch {
         setForm({
@@ -982,8 +986,11 @@ function AdminSettingsPage() {
           price_term:           SAMPLE_PAYMENT_INFO.price_term,
           price_yearly:         SAMPLE_PAYMENT_INFO.price_yearly,
           teacher_bio:          ABOUT_DRAFTS[tweaks.aboutDraft].body,
+          theme_color:          '#7C3AED',
         });
       }
+      loadBrandImage('logo', setLogoUrl);
+      loadBrandImage('avatar', setAvatarUrl);
     })();
   }, []);
 
@@ -995,16 +1002,118 @@ function AdminSettingsPage() {
     } catch (e) { toast.show(e.message || 'فشل الحفظ', 'error'); }
   };
 
+  const uploadImage = async (type, file, setBusy, setUrl) => {
+    if (!file) return;
+    setBusy(true);
+    try {
+      const token = store.get('token');
+      const fd = new FormData();
+      fd.append('type', type);
+      fd.append('image', file);
+      const res = await fetch(`${API_BASE}/api/admin/brand`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: fd,
+      });
+      if (!res.ok) throw new Error('فشل الرفع');
+      toast.show('اترفعت الصورة', 'success');
+      loadBrandImage(type, setUrl);
+    } catch (e) { toast.show(e.message || 'فشل الرفع', 'error'); }
+    finally { setBusy(false); }
+  };
+
+  const deleteImage = async (type, setUrl) => {
+    if (!confirm('متأكد إنك عايز تمسح الصورة دي؟')) return;
+    try {
+      await apiFetch(`/api/admin/brand/${type}`, { method: 'DELETE' });
+      toast.show('اتمسحت الصورة', 'success');
+      setUrl(null);
+    } catch (e) { toast.show(e.message || 'فشل الحذف', 'error'); }
+  };
+
   if (!form) return <AdminLayout active="settings"><div className="sk h-96"/></AdminLayout>;
 
   return (
     <AdminLayout active="settings">
       <div className="mb-6">
         <h1 className="text-3xl font-black text-brand-950 dark:text-white font-cairo">الإعدادات</h1>
-        <p className="text-ink-900/60 dark:text-white/60 mt-1">تحكم في أرقام الدفع، الأسعار، ونص المعلم</p>
+        <p className="text-ink-900/60 dark:text-white/60 mt-1">تحكم في أرقام الدفع، الأسعار، نص المعلم، الصور، والثيم</p>
       </div>
 
       <form onSubmit={save} className="space-y-6 max-w-3xl">
+
+        {/* Brand images */}
+        <div className="rounded-3xl p-6 bg-white dark:bg-ink-900 border border-brand-100 dark:border-brand-900/40 shadow-soft space-y-5">
+          <div className="font-black text-brand-950 dark:text-white text-lg flex items-center gap-2">
+            <DnaIcon size={22}/> شعار الموقع وصورة المعلم
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label className="text-sm font-bold mb-2 block text-ink-900/70 dark:text-white/70">شعار الموقع (Logo)</label>
+              <div className="rounded-2xl border-2 border-dashed border-brand-200 dark:border-brand-900/50 p-4 text-center">
+                <div className="w-20 h-20 mx-auto mb-3 rounded-2xl bg-brand-50 dark:bg-brand-900/40 flex items-center justify-center overflow-hidden">
+                  {logoUrl ? <img src={logoUrl} alt="logo" className="w-full h-full object-cover"/> : <DnaIcon size={32} className="text-brand-300"/>}
+                </div>
+                <input id="logo-upload" type="file" accept="image/*" className="hidden"
+                  onChange={e => uploadImage('logo', e.target.files[0], setUploadingLogo, setLogoUrl)}/>
+                <div className="flex items-center justify-center gap-2">
+                  <label htmlFor="logo-upload" className="btn-ghost !py-1.5 !px-3 text-xs cursor-pointer">
+                    {uploadingLogo ? '...جاري الرفع' : (logoUrl ? 'تغيير' : 'رفع صورة')}
+                  </label>
+                  {logoUrl && (
+                    <button type="button" onClick={() => deleteImage('logo', setLogoUrl)}
+                      className="px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 text-xs font-black">
+                      حذف
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-bold mb-2 block text-ink-900/70 dark:text-white/70">صورة المعلم</label>
+              <div className="rounded-2xl border-2 border-dashed border-brand-200 dark:border-brand-900/50 p-4 text-center">
+                <div className="w-20 h-20 mx-auto mb-3 rounded-full bg-brand-50 dark:bg-brand-900/40 flex items-center justify-center overflow-hidden">
+                  {avatarUrl ? <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover"/> : <UsersIcon size={32} className="text-brand-300"/>}
+                </div>
+                <input id="avatar-upload" type="file" accept="image/*" className="hidden"
+                  onChange={e => uploadImage('avatar', e.target.files[0], setUploadingAvatar, setAvatarUrl)}/>
+                <div className="flex items-center justify-center gap-2">
+                  <label htmlFor="avatar-upload" className="btn-ghost !py-1.5 !px-3 text-xs cursor-pointer">
+                    {uploadingAvatar ? '...جاري الرفع' : (avatarUrl ? 'تغيير' : 'رفع صورة')}
+                  </label>
+                  {avatarUrl && (
+                    <button type="button" onClick={() => deleteImage('avatar', setAvatarUrl)}
+                      className="px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 text-xs font-black">
+                      حذف
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Theme color */}
+        <div className="rounded-3xl p-6 bg-white dark:bg-ink-900 border border-brand-100 dark:border-brand-900/40 shadow-soft space-y-4">
+          <div className="font-black text-brand-950 dark:text-white text-lg">لون الثيم للموقع</div>
+          <div className="flex flex-wrap gap-3">
+            {THEME_COLORS.map(t => (
+              <button key={t.key} type="button" onClick={() => setForm({...form, theme_color: t.color})}
+                className={`flex flex-col items-center gap-1.5 p-2 rounded-xl border-2 transition-all ${
+                  form.theme_color === t.color ? 'border-brand-700 scale-105' : 'border-transparent'
+                }`}>
+                <span className="w-10 h-10 rounded-full shadow-soft" style={{ background: t.color }}/>
+                <span className="text-[11px] font-bold text-ink-900/70 dark:text-white/70">{t.label}</span>
+              </button>
+            ))}
+          </div>
+          <div className="text-xs text-ink-900/50 dark:text-white/50">
+            هيتطبق اللون ده لكل الطلاب اللي بيزوروا الموقع بعد الحفظ.
+          </div>
+        </div>
+
         <div className="rounded-3xl p-6 bg-white dark:bg-ink-900 border border-brand-100 dark:border-brand-900/40 shadow-soft space-y-4">
           <div className="font-black text-brand-950 dark:text-white text-lg flex items-center gap-2">
             <WalletIcon/> أرقام الدفع
