@@ -721,6 +721,7 @@ function AdminStudentsPage() {
   const [search, setSearch] = React.useState('');
   const [grade, setGrade] = React.useState('all');
   const [revokeFor, setRevokeFor] = React.useState(null);
+  const [deleteFor, setDeleteFor] = React.useState(null);
 
   const load = async () => {
     try {
@@ -743,6 +744,13 @@ function AdminStudentsPage() {
     try {
       await apiFetch(`/api/admin/students/${id}/subscription`, { method: 'DELETE' });
       toast.show('اتلغى الاشتراك', 'success'); setRevokeFor(null); load();
+    } catch (e) { toast.show(e.message || 'فشل', 'error'); }
+  };
+
+  const remove = async (id) => {
+    try {
+      await apiFetch(`/api/admin/students/${id}`, { method: 'DELETE' });
+      toast.show('اتحذف الطالب', 'success'); setDeleteFor(null); load();
     } catch (e) { toast.show(e.message || 'فشل', 'error'); }
   };
 
@@ -810,12 +818,18 @@ function AdminStudentsPage() {
                     </td>
                     <td className="p-4 text-xs text-ink-900/60 dark:text-white/50">{s.created_at}</td>
                     <td className="p-4">
-                      {status === 'active' && (
-                        <button onClick={() => setRevokeFor(s)}
-                          className="px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 text-xs font-black hover:bg-red-100">
-                          إلغاء الاشتراك
+                      <div className="flex items-center gap-2">
+                        {status === 'active' && (
+                          <button onClick={() => setRevokeFor(s)}
+                            className="px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 text-xs font-black hover:bg-red-100">
+                            إلغاء الاشتراك
+                          </button>
+                        )}
+                        <button onClick={() => setDeleteFor(s)}
+                          className="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-600 flex items-center justify-center hover:bg-red-100">
+                          <TrashIcon size={16}/>
                         </button>
-                      )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -835,6 +849,20 @@ function AdminStudentsPage() {
             className="btn-primary w-full !bg-gradient-to-l from-red-600 to-red-500 hover:from-red-700 hover:to-red-600"
             style={{ background: 'linear-gradient(135deg, #DC2626, #EF4444)' }}>
             تأكيد الإلغاء
+          </button>
+        </div>
+      </Modal>
+
+      <Modal open={!!deleteFor} onClose={() => setDeleteFor(null)} title="حذف الطالب">
+        <div className="space-y-4">
+          <p className="text-ink-900/70 dark:text-white/70">
+            متأكد إنك عايز تمسح <span className="font-black text-brand-950 dark:text-white">{deleteFor?.name}</span> نهائيًا؟
+            هيتمسح كل بياناته (تقدمه في الدروس، سجل الدفعات) ومينفعش ترجعه.
+          </p>
+          <button onClick={() => remove(deleteFor.id)}
+            className="btn-primary w-full !bg-gradient-to-l from-red-600 to-red-500 hover:from-red-700 hover:to-red-600"
+            style={{ background: 'linear-gradient(135deg, #DC2626, #EF4444)' }}>
+            تأكيد الحذف نهائيًا
           </button>
         </div>
       </Modal>
