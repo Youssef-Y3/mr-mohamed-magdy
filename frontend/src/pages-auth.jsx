@@ -153,6 +153,12 @@ function LoginPage() {
 }
 
 // ---- Register ----
+// NOTE: grade values below must match the backend's VALID_GRADES exactly
+// (see auth.js / admin.js / google-auth.js / courses.js) — those use the
+// Arabic labels 'اولي ثانوي' / 'تالته ثانوي'. Previously this sent
+// 'first' / 'third', which the backend always rejected with
+// "الصف الدراسي غير صالح", and — even when a value did slip through —
+// never matched course.grade, leaving students with zero visible courses.
 function RegisterPage() {
   const { login } = useAuth();
   const toast = useToast();
