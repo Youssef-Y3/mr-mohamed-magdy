@@ -31,12 +31,26 @@ function StudentLayout({ children }) {
 function StudentDashboard() {
   const { user } = useAuth();
   const { tweaks } = useTweaksCtx();
-  const [progress] = React.useState(SAMPLE_PROGRESS); // (real API not documented)
+  // Real progress fetched from /api/student/progress. Falls back to
+  // SAMPLE_PROGRESS only if the request fails and sample mode is on —
+  // it no longer silently shows fake "active" subscriptions for real users.
+  const [progress, setProgress] = React.useState(null);
   const [courses, setCourses] = React.useState(null);
   const [payInfo, setPayInfo] = React.useState(null);
 
   React.useEffect(() => {
     (async () => {
+      try {
+        const data = await apiFetch('/api/student/progress');
+        setProgress(data);
+      } catch {
+        setProgress(tweaks.sampleData ? SAMPLE_PROGRESS : {
+          last_lesson: null,
+          overall_percent: 0,
+          subscription: { status: 'trial', plan: null, expires_at: null },
+          streak_days: 0,
+        });
+      }
       try {
         const data = await apiFetch('/api/courses');
         setCourses(Array.isArray(data) ? data : (data.courses || data.items || []));
@@ -50,6 +64,14 @@ function StudentDashboard() {
 
   const grade = user?.grade || 'first';
   const myCourses = courses ? courses.filter(c => c.grade === grade) : null;
+
+  if (!progress) {
+    return (
+      <StudentLayout>
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-16"><CellLoader label="جاري تحميل لوحتك..."/></div>
+      </StudentLayout>
+    );
+  }
 
   return (
     <StudentLayout>
@@ -107,22 +129,28 @@ function StudentDashboard() {
                 {progress.subscription.status === 'active' ? 'فعّال' : 'غير فعّال'}
               </div>
               <div className="text-xs text-ink-900/60 dark:text-white/60">
-                ينتهي: {progress.subscription.expires_at}
+                {progress.subscription.expires_at ? `ينتهي: ${progress.subscription.expires_at}` : 'لا يوجد اشتراك حاليًا'}
               </div>
             </div>
           </FadeIn>
           <FadeIn delay={0.15}>
-            <a href={`#/dash/lecture/${progress.last_lesson.id}`}
-              className="rounded-3xl p-5 bg-gradient-to-br from-brand-700 to-violet2-600 text-white block hover:scale-[1.02] transition-transform">
-              <div className="text-white/70 text-sm font-bold mb-2">آخر محاضرة</div>
-              <div className="font-black text-lg mb-3 line-clamp-1">{progress.last_lesson.title}</div>
-              <div className="flex items-center justify-between text-sm">
-                <span>{Math.round(progress.last_lesson.position / progress.last_lesson.duration * 100)}%</span>
-                <span className="inline-flex items-center gap-1 font-bold">
-                  <PlayIcon size={14}/> كمّل من هنا
-                </span>
+            {progress.last_lesson ? (
+              <a href={`#/dash/lecture/${progress.last_lesson.id}`}
+                className="rounded-3xl p-5 bg-gradient-to-br from-brand-700 to-violet2-600 text-white block hover:scale-[1.02] transition-transform">
+                <div className="text-white/70 text-sm font-bold mb-2">آخر محاضرة</div>
+                <div className="font-black text-lg mb-3 line-clamp-1">{progress.last_lesson.title}</div>
+                <div className="flex items-center justify-between text-sm">
+                  <span>{progress.last_lesson.duration ? Math.round(progress.last_lesson.position / progress.last_lesson.duration * 100) : 0}%</span>
+                  <span className="inline-flex items-center gap-1 font-bold">
+                    <PlayIcon size={14}/> كمّل من هنا
+                  </span>
+                </div>
+              </a>
+            ) : (
+              <div className="rounded-3xl p-5 bg-white dark:bg-ink-900 border border-brand-100 dark:border-brand-900/40 shadow-soft flex flex-col items-center justify-center text-center h-full">
+                <div className="text-ink-900/60 dark:text-white/60 font-bold text-sm">لسه ما بدأتش أي محاضرة</div>
               </div>
-            </a>
+            )}
           </FadeIn>
         </div>
 
@@ -232,7 +260,11 @@ function CourseDetailPage({ courseId }) {
     (async () => {
       try {
         const data = await apiFetch(`/api/courses/${courseId}`);
-        setCourse(data.course || data);
+        // API returns { course: {...}, units: [...], subscription: {...} } —
+        // units live alongside course, not inside it. Merge them so
+        // course.units is populated (previously this dropped units entirely,
+        // making every course look empty regardless of uploaded videos).
+        setCourse({ ...data.course, units: data.units });
       } catch {
         const found = (tweaks.sampleData ? SAMPLE_COURSES : []).find(c => c.id === courseId);
         setCourse(found || null);
